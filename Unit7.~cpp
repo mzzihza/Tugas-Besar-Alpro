@@ -1,0 +1,478 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit7.h"
+#include "Unit5.h"
+#include "Unit11.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm7 *Form7;
+//---------------------------------------------------------------------------
+__fastcall TForm7::TForm7(TComponent* Owner)
+        : TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+
+
+
+
+
+void __fastcall TForm7::Button1Click(TObject *Sender)
+{
+    String nama    = Edit1->Text.Trim();
+    String layanan = ComboBox1->Text.Trim();
+    int harga   = 0;
+    int antrian = 0;
+
+    // 1. Validasi input
+    if (nama.IsEmpty() || layanan.IsEmpty() ||
+        Edit2->Text.Trim().IsEmpty() || Edit3->Text.Trim().IsEmpty())
+    {
+        ShowMessage("Nama pelanggan, jenis layanan, harga, dan antrian harus diisi!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit2->Text.Trim(), harga) || harga <= 0)
+    {
+        ShowMessage("Harga layanan harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit3->Text.Trim(), antrian) || antrian <= 0)
+    {
+        ShowMessage("Nomor antrian harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    // 2. Cari label header kolom di groupbox List Antrian
+    //    (label di groupbox input sebelah kiri dilewati)
+    TLabel *hNo = NULL, *hNama = NULL, *hLayanan = NULL, *hHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl == NULL || lbl->Parent == Edit1->Parent)
+            continue;
+
+        String teks = lbl->Caption.Trim();
+        if (SameText(teks, "No"))                  hNo = lbl;
+        else if (SameText(teks, "Nama Pelanggan")) hNama = lbl;
+        else if (SameText(teks, "Jenis Layanan"))  hLayanan = lbl;
+        else if (SameText(teks, "Harga"))          hHarga = lbl;
+    }
+
+    if (hNo == NULL || hNama == NULL || hLayanan == NULL || hHarga == NULL)
+    {
+        ShowMessage("Header kolom List Antrian tidak ditemukan!");
+        return;
+    }
+
+    // 3. Cari baris yang nomornya sama dengan antrian (mis. "5.")
+    TLabel *lblNo = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl->Parent == hNo->Parent &&
+            lbl->Top > hNo->Top &&
+            abs(lbl->Left - hNo->Left) <= 5)
+        {
+            String angka = StringReplace(lbl->Caption, ".", "",
+                                         TReplaceFlags() << rfReplaceAll).Trim();
+            if (angka == IntToStr(antrian))
+            {
+                lblNo = lbl;
+                break;
+            }
+        }
+    }
+
+    if (lblNo == NULL)
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) + " tidak ada di list!");
+        return;
+    }
+
+    // 4. Cari label nama, layanan, dan harga pada baris yang sama
+    //    (posisi Top hampir sama, kolomnya ditentukan dari posisi Left header)
+    TLabel *lblNama = NULL, *lblLayanan = NULL, *lblHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl != lblNo &&
+            lbl->Parent == lblNo->Parent &&
+            abs(lbl->Top - lblNo->Top) <= 5)
+        {
+            if (abs(lbl->Left - hNama->Left) <= 5)         lblNama = lbl;
+            else if (abs(lbl->Left - hLayanan->Left) <= 5) lblLayanan = lbl;
+            else if (abs(lbl->Left - hHarga->Left) <= 5)   lblHarga = lbl;
+        }
+    }
+
+    if (lblNama == NULL || lblLayanan == NULL || lblHarga == NULL)
+    {
+        ShowMessage("Label data untuk antrian ini tidak ditemukan!");
+        return;
+    }
+
+    // 5. Pastikan baris belum terisi
+    if (!lblNama->Caption.Trim().IsEmpty())
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) +
+                    " sudah terisi oleh " + lblNama->Caption + "!");
+        return;
+    }
+
+    // 6. Isi baris list antrian
+    lblNama->Caption    = nama;
+    lblLayanan->Caption = layanan;
+    lblHarga->Caption   = IntToStr(harga);
+
+    // 7. Kosongkan input supaya siap dipakai lagi
+    Edit1->Clear();
+    ComboBox1->ItemIndex = -1;
+    ComboBox1->Text = "";
+    Edit2->Clear();
+    Edit3->Clear();
+    Edit1->SetFocus();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm7::Button4Click(TObject *Sender)
+{
+        Form5->Show();
+        Form7->Hide();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm7::Button2Click(TObject *Sender)
+{
+    String nama    = Edit1->Text.Trim();
+    String layanan = ComboBox1->Text.Trim();
+    int harga   = 0;
+    int antrian = 0;
+
+    // 1. Validasi input
+    if (nama.IsEmpty() || layanan.IsEmpty() ||
+        Edit2->Text.Trim().IsEmpty() || Edit3->Text.Trim().IsEmpty())
+    {
+        ShowMessage("Nama pelanggan, jenis layanan, harga, dan antrian harus diisi!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit2->Text.Trim(), harga) || harga <= 0)
+    {
+        ShowMessage("Harga layanan harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit3->Text.Trim(), antrian) || antrian <= 0)
+    {
+        ShowMessage("Nomor antrian harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    // 2. Cari label header kolom di groupbox List Antrian
+    //    (label di groupbox input sebelah kiri dilewati)
+    TLabel *hNo = NULL, *hNama = NULL, *hLayanan = NULL, *hHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl == NULL || lbl->Parent == Edit1->Parent)
+            continue;
+
+        String teks = lbl->Caption.Trim();
+        if (SameText(teks, "No"))                  hNo = lbl;
+        else if (SameText(teks, "Nama Pelanggan")) hNama = lbl;
+        else if (SameText(teks, "Jenis Layanan"))  hLayanan = lbl;
+        else if (SameText(teks, "Harga"))          hHarga = lbl;
+    }
+
+    if (hNo == NULL || hNama == NULL || hLayanan == NULL || hHarga == NULL)
+    {
+        ShowMessage("Header kolom List Antrian tidak ditemukan!");
+        return;
+    }
+
+    // 3. Cari baris yang nomornya sama dengan antrian (mis. "3.")
+    TLabel *lblNo = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl->Parent == hNo->Parent &&
+            lbl->Top > hNo->Top &&
+            abs(lbl->Left - hNo->Left) <= 5)
+        {
+            String angka = StringReplace(lbl->Caption, ".", "",
+                                         TReplaceFlags() << rfReplaceAll).Trim();
+            if (angka == IntToStr(antrian))
+            {
+                lblNo = lbl;
+                break;
+            }
+        }
+    }
+
+    if (lblNo == NULL)
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) + " tidak ada di list!");
+        return;
+    }
+
+    // 4. Cari label nama, layanan, dan harga pada baris yang sama
+    TLabel *lblNama = NULL, *lblLayanan = NULL, *lblHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl != lblNo &&
+            lbl->Parent == lblNo->Parent &&
+            abs(lbl->Top - lblNo->Top) <= 5)
+        {
+            if (abs(lbl->Left - hNama->Left) <= 5)         lblNama = lbl;
+            else if (abs(lbl->Left - hLayanan->Left) <= 5) lblLayanan = lbl;
+            else if (abs(lbl->Left - hHarga->Left) <= 5)   lblHarga = lbl;
+        }
+    }
+
+    if (lblNama == NULL || lblLayanan == NULL || lblHarga == NULL)
+    {
+        ShowMessage("Label data untuk antrian ini tidak ditemukan!");
+        return;
+    }
+
+    // 5. Pastikan baris ada isinya dan datanya cocok dengan input
+    if (lblNama->Caption.Trim().IsEmpty())
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) +
+                    " masih kosong, tidak ada yang dihapus!");
+        return;
+    }
+
+    if (!SameText(lblNama->Caption.Trim(), nama) ||
+        !SameText(lblLayanan->Caption.Trim(), layanan) ||
+        StrToIntDef(lblHarga->Caption.Trim(), -1) != harga)
+    {
+        ShowMessage("Data yang diinput tidak sama dengan antrian nomor " +
+                    IntToStr(antrian) + " (" + lblNama->Caption + " - " +
+                    lblLayanan->Caption + " - " + lblHarga->Caption + ")!");
+        return;
+    }
+
+    // 6. Hapus antrian, lalu geser antrian di bawahnya naik satu nomor
+    const int MAKS = 50;    // jumlah baris maksimal di list (sesuaikan)
+    TLabel *barisNo[MAKS + 1]      = {NULL};
+    TLabel *barisNama[MAKS + 1]    = {NULL};
+    TLabel *barisLayanan[MAKS + 1] = {NULL};
+    TLabel *barisHarga[MAKS + 1]   = {NULL};
+    int terakhir = 0;       // nomor baris paling bawah di list
+
+    // 6a. Kumpulkan label nomor setiap baris ("1.", "2.", dst.)
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl->Parent == hNo->Parent &&
+            lbl->Top > hNo->Top &&
+            abs(lbl->Left - hNo->Left) <= 5)
+        {
+            int n = StrToIntDef(StringReplace(lbl->Caption, ".", "",
+                                TReplaceFlags() << rfReplaceAll).Trim(), 0);
+            if (n >= 1 && n <= MAKS)
+            {
+                barisNo[n] = lbl;
+                if (n > terakhir)
+                    terakhir = n;
+            }
+        }
+    }
+
+    // 6b. Untuk tiap baris, cari label nama, layanan, dan harga
+    for (int n = 1; n <= terakhir; n++)
+    {
+        if (barisNo[n] == NULL)
+            continue;
+
+        for (int i = 0; i < ComponentCount; i++)
+        {
+            TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+            if (lbl != NULL &&
+                lbl != barisNo[n] &&
+                lbl->Parent == hNo->Parent &&
+                abs(lbl->Top - barisNo[n]->Top) <= 5)
+            {
+                if (abs(lbl->Left - hNama->Left) <= 5)         barisNama[n] = lbl;
+                else if (abs(lbl->Left - hLayanan->Left) <= 5) barisLayanan[n] = lbl;
+                else if (abs(lbl->Left - hHarga->Left) <= 5)   barisHarga[n] = lbl;
+            }
+        }
+    }
+
+    // 6c. Geser: isi baris n diganti isi baris n + 1
+    //     (hapus no 1 -> no 2 naik ke 1, no 3 naik ke 2, dst.)
+    for (int n = antrian; n < terakhir; n++)
+    {
+        if (barisNama[n] != NULL && barisNama[n + 1] != NULL &&
+            barisLayanan[n] != NULL && barisLayanan[n + 1] != NULL &&
+            barisHarga[n] != NULL && barisHarga[n + 1] != NULL)
+        {
+            barisNama[n]->Caption    = barisNama[n + 1]->Caption;
+            barisLayanan[n]->Caption = barisLayanan[n + 1]->Caption;
+            barisHarga[n]->Caption   = barisHarga[n + 1]->Caption;
+        }
+    }
+
+    // 6d. Kosongkan baris paling bawah karena isinya sudah naik
+    if (barisNama[terakhir] != NULL && barisLayanan[terakhir] != NULL &&
+        barisHarga[terakhir] != NULL)
+    {
+        barisNama[terakhir]->Caption    = "";
+        barisLayanan[terakhir]->Caption = "";
+        barisHarga[terakhir]->Caption   = "";
+    }
+
+    // 7. Kosongkan input supaya siap dipakai lagi
+    Edit1->Clear();
+    ComboBox1->ItemIndex = -1;
+    ComboBox1->Text = "";
+    Edit2->Clear();
+    Edit3->Clear();
+    Edit1->SetFocus();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm7::Button3Click(TObject *Sender)
+{
+    String nama    = Edit1->Text.Trim();
+    String layanan = ComboBox1->Text.Trim();
+    int harga   = 0;
+    int antrian = 0;
+
+    // 1. Validasi input
+    if (nama.IsEmpty() || layanan.IsEmpty() ||
+        Edit2->Text.Trim().IsEmpty() || Edit3->Text.Trim().IsEmpty())
+    {
+        ShowMessage("Nama pelanggan, jenis layanan, harga, dan antrian harus diisi!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit2->Text.Trim(), harga) || harga <= 0)
+    {
+        ShowMessage("Harga layanan harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    if (!TryStrToInt(Edit3->Text.Trim(), antrian) || antrian <= 0)
+    {
+        ShowMessage("Nomor antrian harus berupa angka lebih dari 0!");
+        return;
+    }
+
+    // 2. Cari label header kolom di groupbox List Antrian
+    //    (label di groupbox input sebelah kiri dilewati)
+    TLabel *hNo = NULL, *hNama = NULL, *hLayanan = NULL, *hHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl == NULL || lbl->Parent == Edit1->Parent)
+            continue;
+
+        String teks = lbl->Caption.Trim();
+        if (SameText(teks, "No"))                  hNo = lbl;
+        else if (SameText(teks, "Nama Pelanggan")) hNama = lbl;
+        else if (SameText(teks, "Jenis Layanan"))  hLayanan = lbl;
+        else if (SameText(teks, "Harga"))          hHarga = lbl;
+    }
+
+    if (hNo == NULL || hNama == NULL || hLayanan == NULL || hHarga == NULL)
+    {
+        ShowMessage("Header kolom List Antrian tidak ditemukan!");
+        return;
+    }
+
+    // 3. Cari baris yang nomornya sama dengan antrian (mis. "2.")
+    TLabel *lblNo = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl->Parent == hNo->Parent &&
+            lbl->Top > hNo->Top &&
+            abs(lbl->Left - hNo->Left) <= 5)
+        {
+            String angka = StringReplace(lbl->Caption, ".", "",
+                                         TReplaceFlags() << rfReplaceAll).Trim();
+            if (angka == IntToStr(antrian))
+            {
+                lblNo = lbl;
+                break;
+            }
+        }
+    }
+
+    if (lblNo == NULL)
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) + " tidak ada di list!");
+        return;
+    }
+
+    // 4. Cari label nama, layanan, dan harga pada baris yang sama
+    //    (posisi Top hampir sama, kolomnya ditentukan dari posisi Left header)
+    TLabel *lblNama = NULL, *lblLayanan = NULL, *lblHarga = NULL;
+    for (int i = 0; i < ComponentCount; i++)
+    {
+        TLabel *lbl = dynamic_cast<TLabel*>(Components[i]);
+        if (lbl != NULL &&
+            lbl != lblNo &&
+            lbl->Parent == lblNo->Parent &&
+            abs(lbl->Top - lblNo->Top) <= 5)
+        {
+            if (abs(lbl->Left - hNama->Left) <= 5)         lblNama = lbl;
+            else if (abs(lbl->Left - hLayanan->Left) <= 5) lblLayanan = lbl;
+            else if (abs(lbl->Left - hHarga->Left) <= 5)   lblHarga = lbl;
+        }
+    }
+
+    if (lblNama == NULL || lblLayanan == NULL || lblHarga == NULL)
+    {
+        ShowMessage("Label data untuk antrian ini tidak ditemukan!");
+        return;
+    }
+
+    // 5. Pastikan baris ada isinya dan datanya cocok dengan input
+    if (lblNama->Caption.Trim().IsEmpty())
+    {
+        ShowMessage("Antrian nomor " + IntToStr(antrian) +
+                    " masih kosong, belum ada pelanggan!");
+        return;
+    }
+
+    if (!SameText(lblNama->Caption.Trim(), nama) ||
+        !SameText(lblLayanan->Caption.Trim(), layanan) ||
+        StrToIntDef(lblHarga->Caption.Trim(), -1) != harga)
+    {
+        ShowMessage("Data yang diinput tidak sama dengan antrian nomor " +
+                    IntToStr(antrian) + " (" + lblNama->Caption + " - " +
+                    lblLayanan->Caption + " - " + lblHarga->Caption + ")!");
+        return;
+    }
+
+    // 6. Kirim data ke form pembayaran, lalu tampilkan
+    Form11->Label6->Caption = Edit1->Text;                  // Nama Pelanggan
+    Form11->Label7->Caption = ComboBox1->Text;              // Layanan
+    Form11->Label8->Caption = "Rp " + FloatToStr(harga);    // Harga
+    Form11->Label9->Caption = FloatToStr(harga);    // Total
+    Form11->Label9->Tag     = harga;                        // simpan angka total untuk tombol Hitung
+    Form11->ShowModal();
+
+    // 7. Kosongkan input supaya siap dipakai lagi
+    Edit1->Clear();
+    ComboBox1->ItemIndex = -1;
+    ComboBox1->Text = "";
+    Edit2->Clear();
+    Edit3->Clear();
+    Edit1->SetFocus();
+}
+//---------------------------------------------------------------------------
